@@ -1,0 +1,8 @@
+server.log
+server.err
+node_modules/
+.env
+.DS_Store
+dist/
+build/
+.cache/
