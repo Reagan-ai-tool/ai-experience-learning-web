@@ -17,6 +17,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/practice/:caseId",
+      "destination": "/index.html"
+    },
+    {
       "source": "/submit-experience",
       "destination": "/index.html"
     },

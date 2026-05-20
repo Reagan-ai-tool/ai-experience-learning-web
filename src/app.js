@@ -23,12 +23,21 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function formatFeedback(value) {
+  return escapeHtml(value).replaceAll("\n", "<br />");
+}
+
+function getCaseById(caseId) {
+  return cases.find((item) => item.caseId === caseId);
+}
+
 function renderShell(content, activePath) {
   const navigation = navItems
     .map((item) => {
       const isActive =
         item.href === activePath ||
-        (item.href === "/cases" && activePath.startsWith("/cases/"));
+        (item.href === "/cases" &&
+          (activePath.startsWith("/cases/") || activePath.startsWith("/practice/")));
 
       return `
         <a class="nav-link${isActive ? " is-active" : ""}" href="${item.href}" data-link ${
@@ -60,7 +69,7 @@ function renderShell(content, activePath) {
     </main>
     <footer class="site-footer">
       <div class="site-footer-inner">
-        <span>v0.1 本機前端 demo</span>
+        <span>v0.2 本機前端 demo</span>
         <span>只使用專案內 mock data，不連接正式資料庫或外部 API。</span>
       </div>
     </footer>
@@ -80,17 +89,17 @@ function renderHome() {
         </div>
       </div>
       <aside class="hero-status" aria-label="系統狀態">
-        <span class="panel-kicker">v0.1 sandbox</span>
-        <strong>目前是本機練習沙盒</strong>
-        <p>頁面結構已可展示，資料只來自專案內 mock data。這一版不接 Airtable、n8n、Dify 或任何外部服務。</p>
+        <span class="panel-kicker">v0.2 sandbox</span>
+        <strong>新增 mock 練習流程</strong>
+        <p>CASE005 / CASE006 現在可以進入情境判斷練習頁。所有回饋仍是本機 mock feedback，尚未串接正式 AI。</p>
         <div class="hero-metrics" aria-label="目前 demo 狀態">
           <div>
             <b>2</b>
             <span>mock 案例</span>
           </div>
           <div>
-            <b>5</b>
-            <span>本機頁面</span>
+            <b>2</b>
+            <span>練習入口</span>
           </div>
         </div>
       </aside>
@@ -103,9 +112,9 @@ function renderHome() {
         <p>從工作現場會遇到的問題出發，先理解脈絡、限制與現場壓力。</p>
       </article>
       <article class="value-card tone-cream">
-        <span class="value-mark" aria-hidden="true">解</span>
-        <h2>前人解法</h2>
-        <p>對照有經驗者如何觀察、拆解與補救，把隱性的判斷過程說清楚。</p>
+        <span class="value-mark" aria-hidden="true">練</span>
+        <h2>判斷練習</h2>
+        <p>先寫下自己的判斷順序，再對照本題建議重點與 mock feedback。</p>
       </article>
       <article class="value-card tone-green">
         <span class="value-mark" aria-hidden="true">轉</span>
@@ -160,26 +169,6 @@ function renderCaseCard(caseItem) {
   `;
 }
 
-function getStatusTone(value) {
-  if (["已收到", "已整理", "通過", "是"].includes(value)) {
-    return "success";
-  }
-
-  if (["待整理", "待審核"].includes(value)) {
-    return "pending";
-  }
-
-  if (["否", "尚未建立"].includes(value)) {
-    return "muted";
-  }
-
-  return "neutral";
-}
-
-function renderStatusBadge(value) {
-  return `<span class="status-badge ${getStatusTone(value)}">${escapeHtml(value)}</span>`;
-}
-
 function renderCases() {
   const caseCards = cases.map(renderCaseCard).join("");
 
@@ -188,7 +177,7 @@ function renderCases() {
       <div>
         <p class="eyebrow">案例列表</p>
         <h1>目前可練習的案例</h1>
-        <p>第一版使用專案內 mock data，先驗證案例閱讀、路由與後續 Agent 協作流程。</p>
+        <p>第一版案例資料延續 mock data，v0.2 新增情境判斷練習入口。</p>
       </div>
       <div class="heading-badge">2 個 mock 案例</div>
     </section>
@@ -215,17 +204,10 @@ function renderBulletList(items) {
 }
 
 function renderCaseDetail(caseId) {
-  const caseItem = cases.find((item) => item.caseId === caseId);
+  const caseItem = getCaseById(caseId);
 
   if (!caseItem) {
-    return `
-      <section class="empty-state">
-        <p class="eyebrow">找不到案例</p>
-        <h1>目前沒有 ${escapeHtml(caseId)} 的 mock data</h1>
-        <p>v0.1 只放入 CASE005 與 CASE006，後續可以再擴充更多案例。</p>
-        <a class="button primary" href="/cases" data-link>返回案例列表</a>
-      </section>
-    `;
+    return renderCaseNotFound(caseId);
   }
 
   return `
@@ -235,9 +217,9 @@ function renderCaseDetail(caseId) {
         <h1>${escapeHtml(caseItem.title)}</h1>
         <p class="case-type">${escapeHtml(caseItem.type)}</p>
       </div>
-      <button class="button primary" type="button" data-action="practice-placeholder" aria-expanded="false">
+      <a class="button primary" href="/practice/${caseItem.caseId}" data-link>
         開始練習
-      </button>
+      </a>
     </section>
 
     <section class="detail-layout">
@@ -254,10 +236,60 @@ function renderCaseDetail(caseId) {
         ${renderTagList(caseItem.judgmentSkills)}
       </article>
     </section>
+  `;
+}
 
-    <section class="practice-note" id="practice-note" hidden>
-      <strong>v0.1 暫不串接正式 Dify，後續版本再接入互動練習 App。</strong>
-      <p>這個提示只在本機前端顯示，不會呼叫任何外部服務。</p>
+function renderPractice(caseId) {
+  const caseItem = getCaseById(caseId);
+
+  if (!caseItem) {
+    return renderCaseNotFound(caseId);
+  }
+
+  return `
+    <section class="practice-hero">
+      <div>
+        <p class="eyebrow">情境判斷練習</p>
+        <span class="case-id">${escapeHtml(caseItem.caseId)}</span>
+        <h1>${escapeHtml(caseItem.title)}</h1>
+        <p>v0.2 mock feedback，尚未串接正式 AI 評分。</p>
+      </div>
+      <a class="button secondary" href="/cases/${caseItem.caseId}" data-link>回案例詳情</a>
+    </section>
+
+    <section class="practice-layout">
+      <article class="practice-panel">
+        <h2>案例背景</h2>
+        <p>${escapeHtml(caseItem.background)}</p>
+        <div class="practice-focus">
+          <h3>本關練習重點</h3>
+          ${renderBulletList(caseItem.practice.focusPoints)}
+        </div>
+      </article>
+
+      <article class="practice-panel exercise-card">
+        <span class="heading-badge">第 1 關</span>
+        <h2>${escapeHtml(caseItem.practice.question1)}</h2>
+        <form id="practice-form" class="practice-form">
+          <label>
+            <span>你的回答</span>
+            <textarea
+              name="practiceAnswer"
+              rows="7"
+              placeholder="請寫下你會先確認哪些線索、如何判斷順序，以及下一步會怎麼做。"
+            ></textarea>
+          </label>
+          <button class="button primary" type="submit">送出回答</button>
+        </form>
+        <div class="feedback-card" id="practice-feedback" role="status" hidden>
+          <span class="panel-kicker">mock AI 回饋</span>
+          <p>${formatFeedback(caseItem.practice.mockFeedback)}</p>
+        </div>
+        <div class="next-placeholder">
+          <span class="status-badge pending">下一關 placeholder</span>
+          <p>後續版本可加入第二關追問、比較前人解法與行動反思。v0.2 目前不串接正式 AI。</p>
+        </div>
+      </article>
     </section>
   `;
 }
@@ -277,7 +309,7 @@ function renderSubmitExperience() {
       <div class="form-intro">
         <span class="panel-kicker">表單 demo</span>
         <h2>把現場經驗整理成可學習的案例素材</h2>
-        <p>請先用自然語言描述情境、限制、判斷與結果。v0.1 只在前端顯示測試成功訊息，不會送出到任何外部系統。</p>
+        <p>請先用自然語言描述情境、限制、判斷與結果。v0.2 只在前端顯示測試成功訊息，不會送出到任何外部系統。</p>
       </div>
       <form id="experience-form" class="experience-form">
         <label>
@@ -325,28 +357,32 @@ function renderSubmitExperience() {
         </div>
       </form>
       <div class="success-message" id="submit-message" role="status" hidden>
-        已收到你的測試投稿。v0.1 目前不寫入正式資料庫，後續版本會再串接審核流程。
+        已收到你的測試投稿。v0.2 目前不寫入正式資料庫，後續版本會再串接審核流程。
       </div>
     </section>
   `;
+}
+
+function renderWorkflowBadge(step) {
+  return `<span class="flow-badge ${escapeHtml(step.status)}">${escapeHtml(step.label)}</span>`;
 }
 
 function renderAdminReview() {
   const rows = reviewItems
     .map(
       (item) => `
-        <tr>
-          <td>
-            <strong>${escapeHtml(item.id)}</strong>
-            <span>${escapeHtml(item.title)}</span>
-          </td>
-          <td>${escapeHtml(item.relatedCaseId)}</td>
-          <td>${renderStatusBadge(item.submissionStatus)}</td>
-          <td>${renderStatusBadge(item.aiStatus)}</td>
-          <td>${renderStatusBadge(item.draftStatus)}</td>
-          <td>${renderStatusBadge(item.publishable)}</td>
-          <td>${renderStatusBadge(item.humanReviewStatus)}</td>
-        </tr>
+        <article class="review-flow-card">
+          <div class="review-flow-header">
+            <div>
+              <span class="case-id">${escapeHtml(item.id)}</span>
+              <h2>${escapeHtml(item.title)}</h2>
+              <p>Case Draft：${escapeHtml(item.relatedCaseId)}</p>
+            </div>
+          </div>
+          <div class="flow-badge-list" aria-label="審核流程狀態">
+            ${item.workflow.map(renderWorkflowBadge).join("")}
+          </div>
+        </article>
       `
     )
     .join("");
@@ -355,32 +391,30 @@ function renderAdminReview() {
     <section class="section-heading">
       <div>
         <p class="eyebrow">管理審核 demo</p>
-        <h1>模擬人工審核流程</h1>
-        <p>此頁為 v0.1 demo，不連接正式資料。</p>
+        <h1>流程狀態展示</h1>
+        <p>此頁為 v0.2 demo，目前不連接正式 Airtable / n8n / Dify。</p>
       </div>
-      <div class="heading-badge">mock review</div>
+      <div class="heading-badge">mock review flow</div>
     </section>
 
     <section class="admin-panel">
       <div class="demo-alert">
-        此頁為 v0.1 demo，不連接正式資料。所有狀態都來自專案內 mock data，不會建立、修改或刪除任何正式資料。
+        此頁為 v0.2 demo，目前不連接正式 Airtable / n8n / Dify。所有狀態都來自專案內 mock data，不會建立、修改或刪除任何正式資料。
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>投稿</th>
-              <th>Case Draft</th>
-              <th>投稿狀態</th>
-              <th>AI 整理狀態</th>
-              <th>Case Draft 狀態</th>
-              <th>是否可發布</th>
-              <th>人工審核狀態</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+      <div class="review-flow-grid">
+        ${rows}
       </div>
+    </section>
+  `;
+}
+
+function renderCaseNotFound(caseId) {
+  return `
+    <section class="empty-state">
+      <p class="eyebrow">找不到案例</p>
+      <h1>目前沒有 ${escapeHtml(caseId)} 的 mock data</h1>
+      <p>v0.2 只放入 CASE005 與 CASE006，後續可以再擴充更多案例與練習題。</p>
+      <a class="button primary" href="/cases" data-link>返回案例列表</a>
     </section>
   `;
 }
@@ -410,6 +444,9 @@ function render() {
   } else if (activePath.startsWith("/cases/")) {
     const caseId = decodeURIComponent(activePath.split("/")[2] || "");
     content = renderCaseDetail(caseId);
+  } else if (activePath.startsWith("/practice/")) {
+    const caseId = decodeURIComponent(activePath.split("/")[2] || "");
+    content = renderPractice(caseId);
   } else if (activePath === "/submit-experience") {
     content = renderSubmitExperience();
   } else if (activePath === "/admin-review") {
@@ -423,38 +460,37 @@ function render() {
 
 document.addEventListener("click", (event) => {
   const link = event.target.closest("a[data-link]");
-  if (link) {
-    const targetUrl = new URL(link.href);
-    if (targetUrl.origin === window.location.origin) {
-      event.preventDefault();
-      window.history.pushState({}, "", targetUrl.pathname);
-      render();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  if (!link) {
     return;
   }
 
-  const action = event.target.closest("[data-action='practice-placeholder']");
-  if (action) {
-    const note = document.querySelector("#practice-note");
-    if (note) {
-      note.hidden = false;
-      action.setAttribute("aria-expanded", "true");
-      note.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+  const targetUrl = new URL(link.href);
+  if (targetUrl.origin === window.location.origin) {
+    event.preventDefault();
+    window.history.pushState({}, "", targetUrl.pathname);
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 });
 
 document.addEventListener("submit", (event) => {
-  if (event.target.id !== "experience-form") {
+  if (event.target.id === "experience-form") {
+    event.preventDefault();
+    const message = document.querySelector("#submit-message");
+    if (message) {
+      message.hidden = false;
+      message.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     return;
   }
 
-  event.preventDefault();
-  const message = document.querySelector("#submit-message");
-  if (message) {
-    message.hidden = false;
-    message.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (event.target.id === "practice-form") {
+    event.preventDefault();
+    const feedback = document.querySelector("#practice-feedback");
+    if (feedback) {
+      feedback.hidden = false;
+      feedback.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }
 });
 

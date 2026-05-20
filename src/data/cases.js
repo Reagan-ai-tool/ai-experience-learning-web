@@ -1,3 +1,6 @@
+export const mockFeedback =
+  "本關評估：中高｜達到本題建議標準\n\n你已經抓到這題的重點：先理解現場問題，再思考可行的處理順序。\n\nv0.2 目前為 mock feedback，尚未串接正式 AI 評分。";
+
 export const cases = [
   {
     caseId: "CASE005",
@@ -15,6 +18,17 @@ export const cases = [
       "理解小範圍測試如何協助判斷改善是否真的有效。"
     ],
     judgmentSkills: ["流程拆解", "分工設計", "現場觀察", "小範圍測試"],
+    practice: {
+      question1:
+        "如果你發現現場某個清洗流程太慢，已經影響後續作業，你會先怎麼判斷問題卡在哪裡？",
+      focusPoints: [
+        "不要一開始就只想增加人力",
+        "先觀察流程卡點",
+        "拆解步驟",
+        "找出等待、移動、重複動作或分工不清的地方"
+      ],
+      mockFeedback
+    },
     status: "published"
   },
   {
@@ -33,6 +47,18 @@ export const cases = [
       "學習如何把一次現場錯誤轉化為流程修正。"
     ],
     judgmentSkills: ["錯誤分級", "損失控制", "現場補救", "流程修正"],
+    practice: {
+      question1:
+        "如果你發現白米秤錯，第一時間你會先確認哪些事情，來降低損失？",
+      focusPoints: [
+        "不要先追究責任",
+        "先確認錯誤程度",
+        "判斷是否仍可安全使用",
+        "思考能否轉用或重新分配",
+        "後續再回頭修流程"
+      ],
+      mockFeedback
+    },
     status: "published"
   }
 ];
@@ -42,40 +68,52 @@ export const reviewItems = [
     id: "SUBMIT-001",
     title: "清洗流程分工改善經驗",
     relatedCaseId: "CASE005",
-    submissionStatus: "已收到",
-    aiStatus: "已整理",
-    draftStatus: "待審核",
-    publishable: "是",
-    humanReviewStatus: "待審核"
+    workflow: [
+      { label: "投稿已收到", status: "done" },
+      { label: "AI 整理中", status: "active" },
+      { label: "Case Draft 待審核", status: "pending" },
+      { label: "Prompt 待生成", status: "pending" },
+      { label: "前台待發布", status: "pending" },
+      { label: "已發布", status: "muted" }
+    ]
   },
   {
     id: "SUBMIT-002",
     title: "白米秤重錯誤補救經驗",
     relatedCaseId: "CASE006",
-    submissionStatus: "已收到",
-    aiStatus: "已整理",
-    draftStatus: "待審核",
-    publishable: "否",
-    humanReviewStatus: "待審核"
+    workflow: [
+      { label: "投稿已收到", status: "done" },
+      { label: "AI 整理中", status: "done" },
+      { label: "Case Draft 待審核", status: "active" },
+      { label: "Prompt 待生成", status: "pending" },
+      { label: "前台待發布", status: "pending" },
+      { label: "已發布", status: "muted" }
+    ]
   },
   {
     id: "SUBMIT-003",
     title: "備料順序調整經驗",
     relatedCaseId: "尚未建立",
-    submissionStatus: "已收到",
-    aiStatus: "待整理",
-    draftStatus: "尚未建立",
-    publishable: "否",
-    humanReviewStatus: "待審核"
+    workflow: [
+      { label: "投稿已收到", status: "done" },
+      { label: "AI 整理中", status: "active" },
+      { label: "Case Draft 待審核", status: "pending" },
+      { label: "Prompt 待生成", status: "pending" },
+      { label: "前台待發布", status: "pending" },
+      { label: "已發布", status: "muted" }
+    ]
   },
   {
     id: "SUBMIT-004",
     title: "交接資訊不完整的現場處理",
     relatedCaseId: "DRAFT-004",
-    submissionStatus: "已收到",
-    aiStatus: "已整理",
-    draftStatus: "待審核",
-    publishable: "是",
-    humanReviewStatus: "通過"
+    workflow: [
+      { label: "投稿已收到", status: "done" },
+      { label: "AI 整理中", status: "done" },
+      { label: "Case Draft 待審核", status: "done" },
+      { label: "Prompt 待生成", status: "done" },
+      { label: "前台待發布", status: "done" },
+      { label: "已發布", status: "done" }
+    ]
   }
 ];

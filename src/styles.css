@@ -522,6 +522,54 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.practice-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.practice-hero h1 {
+  margin-bottom: 12px;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+}
+
+.practice-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.practice-panel {
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.exercise-card {
+  background: var(--blue-soft);
+}
+
+.practice-focus {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.practice-focus h3 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
 .detail-list {
   margin: 0;
   padding-left: 1.2rem;
@@ -564,22 +612,26 @@ h2 {
   font-size: 1.55rem;
 }
 
-.experience-form {
+.experience-form,
+.practice-form {
   display: grid;
   gap: 18px;
 }
 
-.experience-form label {
+.experience-form label,
+.practice-form label {
   display: grid;
   gap: 8px;
 }
 
-.experience-form label > span {
+.experience-form label > span,
+.practice-form label > span {
   font-weight: 850;
 }
 
 .experience-form input,
-.experience-form textarea {
+.experience-form textarea,
+.practice-form textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -597,10 +649,31 @@ h2 {
   padding: 12px;
 }
 
+.practice-form textarea {
+  resize: vertical;
+  padding: 14px;
+}
+
 .experience-form input:focus,
-.experience-form textarea:focus {
+.experience-form textarea:focus,
+.practice-form textarea:focus {
   outline: 3px solid rgba(63, 99, 243, 0.16);
   border-color: var(--accent);
+}
+
+.feedback-card,
+.next-placeholder {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border: 1px solid rgba(17, 23, 22, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.feedback-card p,
+.next-placeholder p {
+  margin: 8px 0 0;
+  color: #38423f;
 }
 
 .checkbox-row {
@@ -690,6 +763,77 @@ td > span:not(.status-badge) {
   color: #667085;
 }
 
+.review-flow-grid {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.review-flow-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.review-flow-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.review-flow-header h2 {
+  margin-bottom: 4px;
+}
+
+.review-flow-header p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.flow-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.flow-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.flow-badge.done {
+  border-color: rgba(19, 121, 91, 0.28);
+  background: #eaf7f1;
+  color: var(--success);
+}
+
+.flow-badge.active {
+  border-color: rgba(63, 99, 243, 0.28);
+  background: #eef2ff;
+  color: var(--accent);
+}
+
+.flow-badge.pending {
+  border-color: rgba(160, 90, 0, 0.28);
+  background: #fff5df;
+  color: var(--pending);
+}
+
+.flow-badge.muted {
+  background: #f2f4f7;
+  color: #667085;
+}
+
 .empty-state {
   max-width: 720px;
   margin: 0 auto;
@@ -733,6 +877,7 @@ td > span:not(.status-badge) {
   .value-grid,
   .case-grid,
   .detail-layout,
+  .practice-layout,
   .form-panel {
     grid-template-columns: 1fr;
   }
@@ -748,6 +893,7 @@ td > span:not(.status-badge) {
   }
 
   .detail-hero,
+  .practice-hero,
   .section-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -784,7 +930,9 @@ td > span:not(.status-badge) {
   .form-panel,
   .admin-panel,
   .empty-state,
-  .detail-hero {
+  .detail-hero,
+  .practice-hero,
+  .practice-panel {
     padding: 22px;
   }
 
