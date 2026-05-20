@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node scripts/build-static.mjs",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cases",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cases/:caseId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/submit-experience",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin-review",
+      "destination": "/index.html"
+    }
+  ]
+}
