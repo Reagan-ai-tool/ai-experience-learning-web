@@ -55,8 +55,8 @@ function renderShell(content, activePath) {
         <a class="brand" href="/" data-link>
           <span class="brand-mark" aria-hidden="true">判</span>
           <span>
-            <strong>把前人經驗，變成你的判斷力</strong>
-            <small>AI 真人經驗情境互動學習系統</small>
+            <strong>老手不在，判斷還在</strong>
+            <small>AI 經驗轉訓練系統</small>
           </span>
         </a>
         <nav class="site-nav" aria-label="主要導覽">
@@ -80,12 +80,12 @@ function renderHome() {
   return `
     <section class="workspace-hero">
       <div class="hero-main">
-        <p class="eyebrow">AI 真人經驗情境互動學習系統</p>
-        <h1>把前人經驗，變成你的判斷力</h1>
-        <p class="hero-subtitle">用真實工作情境，練習判斷、取捨與解決問題的能力。</p>
+        <p class="eyebrow">AI 經驗轉訓練系統</p>
+        <h1>老手不在，判斷還在</h1>
+        <p class="hero-subtitle">讓每一次真實經驗，都變成可內化的工作判斷力</p>
         <div class="hero-actions" aria-label="主要行動">
-          <a class="button primary" href="/cases" data-link>開始練習案例</a>
-          <a class="button secondary" href="/submit-experience" data-link>分享我的經驗</a>
+          <a class="button primary" href="/cases" data-link>我要練習判斷力</a>
+          <a class="button secondary" href="/submit-experience" data-link>我要分享我的經驗</a>
         </div>
       </div>
       <aside class="hero-status" aria-label="系統狀態">
@@ -135,13 +135,13 @@ function renderHome() {
         <span class="entry-number">01</span>
         <h2>我要練習判斷力</h2>
         <p>從真實工作案例開始，練習如何分析問題、做出取捨，並對照前人的實際解法。</p>
-        <a class="button primary" href="/cases" data-link>開始練習案例</a>
+        <a class="button primary" href="/cases" data-link>我要練習判斷力</a>
       </article>
       <article class="entry-card">
         <span class="entry-number">02</span>
         <h2>我要分享我的經驗</h2>
         <p>分享你遇過的真實工作情境，讓系統協助整理成可學習的案例。</p>
-        <a class="button secondary" href="/submit-experience" data-link>分享我的經驗</a>
+        <a class="button secondary" href="/submit-experience" data-link>我要分享我的經驗</a>
       </article>
     </section>
   `;
