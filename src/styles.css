@@ -384,10 +384,22 @@ h2 {
   width: 42px;
   height: 42px;
   place-items: center;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--primary);
-  font-weight: 900;
+  border: 1px solid rgba(63, 99, 243, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #344054;
+  box-shadow: 0 10px 24px rgba(17, 23, 22, 0.05);
+}
+
+.value-mark svg,
+.case-mark svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .section-heading {

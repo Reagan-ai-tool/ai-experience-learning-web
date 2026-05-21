@@ -31,6 +31,58 @@ function getCaseById(caseId) {
   return cases.find((item) => item.caseId === caseId);
 }
 
+function renderIcon(name) {
+  const icons = {
+    clipboard: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 5h6" />
+        <path d="M9 3h6a2 2 0 0 1 2 2v1H7V5a2 2 0 0 1 2-2Z" />
+        <path d="M7 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1" />
+        <path d="M8 12h8" />
+        <path d="M8 16h5" />
+      </svg>
+    `,
+    brain: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 4.5a3 3 0 0 0-3 3v.2A3.4 3.4 0 0 0 4 11a3.4 3.4 0 0 0 2 3.1v.4a3 3 0 0 0 3 3" />
+        <path d="M15 4.5a3 3 0 0 1 3 3v.2A3.4 3.4 0 0 1 20 11a3.4 3.4 0 0 1-2 3.1v.4a3 3 0 0 1-3 3" />
+        <path d="M9 4.5v15" />
+        <path d="M15 4.5v15" />
+        <path d="M9 9h3" />
+        <path d="M12 15h3" />
+      </svg>
+    `,
+    refresh: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 7v5h-5" />
+        <path d="M4 17v-5h5" />
+        <path d="M6.2 9A7 7 0 0 1 18.8 7" />
+        <path d="M17.8 15A7 7 0 0 1 5.2 17" />
+      </svg>
+    `,
+    workflow: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6h.01" />
+        <path d="M18 18h.01" />
+        <path d="M6 18h.01" />
+        <path d="M8 6h4a4 4 0 0 1 4 4v6" />
+        <path d="M8 18h8" />
+        <circle cx="6" cy="6" r="2.5" />
+        <circle cx="18" cy="18" r="2.5" />
+        <circle cx="6" cy="18" r="2.5" />
+      </svg>
+    `,
+    shield: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3 19 6v5c0 4.5-2.8 8.2-7 10-4.2-1.8-7-5.5-7-10V6l7-3Z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    `
+  };
+
+  return icons[name] || icons.clipboard;
+}
+
 function renderShell(content, activePath) {
   const navigation = navItems
     .map((item) => {
@@ -107,17 +159,17 @@ function renderHome() {
 
     <section class="value-grid" aria-label="產品價值說明">
       <article class="value-card tone-blue">
-        <span class="value-mark" aria-hidden="true">情</span>
+        <span class="value-mark" aria-hidden="true">${renderIcon("clipboard")}</span>
         <h2>真實情境</h2>
         <p>從工作現場會遇到的問題出發，先理解脈絡、限制與現場壓力。</p>
       </article>
       <article class="value-card tone-cream">
-        <span class="value-mark" aria-hidden="true">練</span>
+        <span class="value-mark" aria-hidden="true">${renderIcon("brain")}</span>
         <h2>判斷練習</h2>
         <p>先寫下自己的判斷順序，再對照本題建議重點與 mock feedback。</p>
       </article>
       <article class="value-card tone-green">
-        <span class="value-mark" aria-hidden="true">轉</span>
+        <span class="value-mark" aria-hidden="true">${renderIcon("refresh")}</span>
         <h2>判斷力轉用</h2>
         <p>把單一案例裡的取捨邏輯，轉成下一次面對情境時可使用的能力。</p>
       </article>
@@ -148,12 +200,12 @@ function renderHome() {
 }
 
 function renderCaseCard(caseItem) {
-  const mark = caseItem.caseId === "CASE005" ? "流" : "補";
+  const icon = caseItem.caseId === "CASE005" ? "workflow" : "shield";
 
   return `
     <article class="case-card">
       <div class="case-card-top">
-        <span class="case-mark" aria-hidden="true">${mark}</span>
+        <span class="case-mark" aria-hidden="true">${renderIcon(icon)}</span>
         <span class="status-pill">mock data</span>
       </div>
       <div class="case-card-body">
