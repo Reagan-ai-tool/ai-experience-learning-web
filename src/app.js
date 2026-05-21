@@ -53,7 +53,7 @@ function renderShell(content, activePath) {
     <header class="site-header">
       <div class="site-header-inner">
         <a class="brand" href="/" data-link>
-          <span class="brand-mark" aria-hidden="true">判</span>
+          <span class="brand-mark" aria-hidden="true">🧠</span>
           <span>
             <strong>老手不在，判斷還在</strong>
             <small>AI 經驗轉訓練系統</small>
@@ -90,8 +90,8 @@ function renderHome() {
       </div>
       <aside class="hero-status" aria-label="系統狀態">
         <span class="panel-kicker">v0.2 sandbox</span>
-        <strong>新增 mock 練習流程</strong>
-        <p>CASE005 / CASE006 現在可以進入情境判斷練習頁。所有回饋仍是本機 mock feedback，尚未串接正式 AI。</p>
+        <strong>產品開發狀態</strong>
+        <p>CASE005 / CASE006 可進入情境判斷練習頁。目前為 mock feedback，尚未串接正式 AI。</p>
         <div class="hero-metrics" aria-label="目前 demo 狀態">
           <div>
             <b>2</b>
