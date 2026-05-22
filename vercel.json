@@ -21,6 +21,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/review/:caseId",
+      "destination": "/index.html"
+    },
+    {
       "source": "/submit-experience",
       "destination": "/index.html"
     },
