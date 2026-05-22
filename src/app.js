@@ -1,12 +1,14 @@
 import { cases, reviewItems } from "./data/cases.js";
 
 const app = document.querySelector("#app");
+const REVIEW_DEMO_TOKEN = "test-token";
 
 const navItems = [
   { href: "/", label: "首頁" },
   { href: "/cases", label: "案例列表" },
   { href: "/submit-experience", label: "經驗投稿" },
-  { href: "/admin-review", label: "管理審核 demo" }
+  { href: "/admin-review", label: "管理審核 demo" },
+  { href: "/review/CASE006?token=test-token", label: "老手審核 Demo" }
 ];
 
 function normalizePath(pathname) {
@@ -88,6 +90,7 @@ function renderShell(content, activePath) {
     .map((item) => {
       const isActive =
         item.href === activePath ||
+        (item.href.startsWith("/review/") && activePath.startsWith("/review/")) ||
         (item.href === "/cases" &&
           (activePath.startsWith("/cases/") || activePath.startsWith("/practice/")));
 
@@ -121,7 +124,7 @@ function renderShell(content, activePath) {
     </main>
     <footer class="site-footer">
       <div class="site-footer-inner">
-        <span>v0.2 本機前端 demo</span>
+        <span>v0.3-A 本機前端 demo</span>
         <span>只使用專案內 mock data，不連接正式資料庫或外部 API。</span>
       </div>
     </footer>
@@ -252,6 +255,100 @@ function renderBulletList(items) {
     <ul class="detail-list">
       ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
     </ul>
+  `;
+}
+
+function renderReviewField(label, value) {
+  return `
+    <article class="review-content-card">
+      <h2>${escapeHtml(label)}</h2>
+      <p>${escapeHtml(value || "尚無資料")}</p>
+    </article>
+  `;
+}
+
+function renderReviewAccessError(message) {
+  return `
+    <section class="empty-state review-error" role="alert">
+      <p class="eyebrow">老手審核入口</p>
+      <h1>${escapeHtml(message)}</h1>
+      <p>請確認 Email 連結中的 caseId 與 token 是否正確，或請管理者重新寄送審核連結。</p>
+    </section>
+  `;
+}
+
+function renderReviewPage(caseId) {
+  const token = new URLSearchParams(window.location.search).get("token") || "";
+
+  if (token !== REVIEW_DEMO_TOKEN) {
+    return renderReviewAccessError("連結無效或已過期");
+  }
+
+  const caseItem = getCaseById(caseId);
+  if (!caseItem) {
+    return renderReviewAccessError("找不到此案例");
+  }
+
+  const fields = [
+    ["Case ID", caseItem.caseId],
+    ["Case Title", caseItem.title],
+    ["One-line Summary", caseItem.summary],
+    ["Case Background", caseItem.background],
+    ["Surface Problem", caseItem.surfaceProblem],
+    ["Core Problem", caseItem.coreProblem],
+    ["Human Judgment Logic", caseItem.humanJudgmentLogic],
+    ["Expert Solution", caseItem.expertSolution],
+    ["AI Draft", caseItem.aiDraft],
+    ["Learning Goal", caseItem.learningGoal]
+  ];
+
+  return `
+    <section class="review-hero">
+      <div>
+        <p class="eyebrow">老手審核入口 Demo</p>
+        <span class="case-id">${escapeHtml(caseItem.caseId)}</span>
+        <h1>${escapeHtml(caseItem.title)}</h1>
+        <p>這是前端 Demo，尚未寫回 Airtable。</p>
+        <p>目前是 v0.3-A Demo；送出結果目前只顯示成功訊息，不會寫入 Airtable，也不會連接 Softr / n8n / Dify 正式流程。</p>
+      </div>
+      <span class="heading-badge">v0.3-A frontend only</span>
+    </section>
+
+    <section class="review-layout" aria-label="案例審核內容">
+      <div class="review-content-grid">
+        ${fields.map(([label, value]) => renderReviewField(label, value)).join("")}
+      </div>
+
+      <aside class="review-form-panel" aria-label="老手審核區">
+        <span class="panel-kicker">老手審核區</span>
+        <h2>送出審核結果</h2>
+        <p>這是前端 Demo，尚未寫回 Airtable。</p>
+        <p>Demo 版送出後只會顯示成功訊息，並在 console.log 印出審核資料。</p>
+        <form id="expert-review-form" class="review-form" data-case-id="${escapeHtml(caseItem.caseId)}">
+          <label>
+            <span>審核狀態</span>
+            <select name="reviewStatus">
+              <option value="審核中">審核中</option>
+              <option value="已通過">已通過</option>
+              <option value="需修改">需修改</option>
+              <option value="不適合公開">不適合公開</option>
+            </select>
+          </label>
+          <label>
+            <span>老手審核備註</span>
+            <textarea name="expertReviewNotes" rows="6" placeholder="請補充需要調整、保留或提醒的地方。"></textarea>
+          </label>
+          <label>
+            <span>老手修正版解法</span>
+            <textarea name="expertRevisedSolution" rows="8" placeholder="可貼上或改寫更貼近現場的解法。">${escapeHtml(caseItem.expertSolution)}</textarea>
+          </label>
+          <button class="button primary" type="submit">送出審核結果</button>
+        </form>
+        <div class="success-message" id="review-submit-message" role="status" hidden>
+          審核結果已送出，系統會自動進入下一步。
+        </div>
+      </aside>
+    </section>
   `;
 }
 
@@ -499,6 +596,9 @@ function render() {
   } else if (activePath.startsWith("/practice/")) {
     const caseId = decodeURIComponent(activePath.split("/")[2] || "");
     content = renderPractice(caseId);
+  } else if (activePath.startsWith("/review/")) {
+    const caseId = decodeURIComponent(activePath.split("/")[2] || "");
+    content = renderReviewPage(caseId);
   } else if (activePath === "/submit-experience") {
     content = renderSubmitExperience();
   } else if (activePath === "/admin-review") {
@@ -519,7 +619,7 @@ document.addEventListener("click", (event) => {
   const targetUrl = new URL(link.href);
   if (targetUrl.origin === window.location.origin) {
     event.preventDefault();
-    window.history.pushState({}, "", targetUrl.pathname);
+    window.history.pushState({}, "", `${targetUrl.pathname}${targetUrl.search}`);
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -542,6 +642,29 @@ document.addEventListener("submit", (event) => {
     if (feedback) {
       feedback.hidden = false;
       feedback.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return;
+  }
+
+  if (event.target.id === "expert-review-form") {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const reviewPayload = {
+      caseId: event.target.dataset.caseId,
+      token: new URLSearchParams(window.location.search).get("token") || "",
+      reviewStatus: formData.get("reviewStatus"),
+      expertReviewNotes: formData.get("expertReviewNotes"),
+      expertRevisedSolution: formData.get("expertRevisedSolution"),
+      submittedAt: new Date().toISOString(),
+      source: "self-hosted-review-demo"
+    };
+
+    console.log("expert review demo submit", reviewPayload);
+
+    const message = document.querySelector("#review-submit-message");
+    if (message) {
+      message.hidden = false;
+      message.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }
 });
