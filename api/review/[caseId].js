@@ -58,6 +58,9 @@ function sendSafeError(response, statusCode, message, debug, details = {}) {
     errorType: details.errorType || "runtime_error",
     missingEnv: details.missingEnv || [],
     httpStatus: details.httpStatus || statusCode,
+    postReceived: details.postReceived,
+    patchAttempted: details.patchAttempted,
+    patchSucceeded: details.patchSucceeded,
     message
   });
 }
@@ -191,12 +194,13 @@ function buildReviewUpdateFields(body) {
   };
 }
 
-async function validateReviewAccess(caseId, token, debug, response) {
+async function validateReviewAccess(caseId, token, debug, response, safeDebugDetails = {}) {
   const record = await findAirtableCase(caseId);
   if (!record) {
     sendSafeError(response, 404, "找不到此案例", debug, {
       errorType: "airtable_not_found",
-      httpStatus: 404
+      httpStatus: 404,
+      ...safeDebugDetails
     });
     return null;
   }
@@ -205,8 +209,9 @@ async function validateReviewAccess(caseId, token, debug, response) {
   const reviewToken = fields[process.env.AIRTABLE_REVIEW_TOKEN_FIELD];
   if (!reviewToken || token !== reviewToken) {
     sendSafeError(response, 401, "連結無效或已過期", debug, {
-      errorType: "invalid_token",
-      httpStatus: 401
+        errorType: "invalid_token",
+        httpStatus: 401,
+        ...safeDebugDetails
     });
     return null;
   }
@@ -229,7 +234,10 @@ async function handlePost(request, response, debug, caseId, token) {
   if (caseId !== ALLOWED_WRITE_CASE_ID) {
     return sendSafeError(response, 403, "目前僅允許測試案例寫回", debug, {
       errorType: "write_case_not_allowed",
-      httpStatus: 403
+      httpStatus: 403,
+      postReceived: true,
+      patchAttempted: false,
+      patchSucceeded: false
     });
   }
 
@@ -238,12 +246,19 @@ async function handlePost(request, response, debug, caseId, token) {
     return sendSafeError(response, 500, "審核 API 尚未完成寫回環境設定", debug, {
       errorType: "missing_env",
       missingEnv,
-      httpStatus: 500
+      httpStatus: 500,
+      postReceived: true,
+      patchAttempted: false,
+      patchSucceeded: false
     });
   }
 
   const body = getRequestBody(request);
-  const record = await validateReviewAccess(caseId, token || body.token, debug, response);
+  const record = await validateReviewAccess(caseId, token || body.token, debug, response, {
+    postReceived: true,
+    patchAttempted: false,
+    patchSucceeded: false
+  });
   if (!record) {
     return;
   }
@@ -252,14 +267,33 @@ async function handlePost(request, response, debug, caseId, token) {
   if (fields[process.env.AIRTABLE_TOKEN_STATUS_FIELD] === TOKEN_USED_VALUE) {
     return sendSafeError(response, 409, "此審核連結已使用", debug, {
       errorType: "token_already_used",
-      httpStatus: 409
+      httpStatus: 409,
+      postReceived: true,
+      patchAttempted: false,
+      patchSucceeded: false
     });
   }
 
   const updateFields = buildReviewUpdateFields(body);
-  await updateAirtableReview(record.id, updateFields);
+  try {
+    await updateAirtableReview(record.id, updateFields);
+  } catch (error) {
+    console.error("review api write failed", {
+      errorType: error.errorType || "runtime_error",
+      httpStatus: error.status || 502
+    });
+    return sendSafeError(response, 502, "目前無法寫回審核資料，請稍後再試", debug, {
+      errorType: error.errorType || "runtime_error",
+      httpStatus: error.status || 502,
+      postReceived: true,
+      patchAttempted: true,
+      patchSucceeded: false
+    });
+  }
 
   return sendJson(response, 200, {
+    ok: true,
+    patchSucceeded: true,
     message: "審核結果已送出，系統會自動進入下一步。"
   });
 }
@@ -318,7 +352,10 @@ export default async function handler(request, response) {
     if (error.status === 400) {
       return sendSafeError(response, 400, error.message, debug, {
         errorType: error.errorType || "runtime_error",
-        httpStatus: 400
+        httpStatus: 400,
+        postReceived: request.method === "POST" ? true : undefined,
+        patchAttempted: request.method === "POST" ? false : undefined,
+        patchSucceeded: request.method === "POST" ? false : undefined
       });
     }
 

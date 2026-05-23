@@ -324,7 +324,7 @@ async function submitReviewResult(caseId, payload) {
   });
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
+  if (!response.ok || data.ok !== true) {
     const error = new Error(data.message || "目前無法送出審核結果");
     error.status = response.status;
     throw error;
