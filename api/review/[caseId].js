@@ -61,6 +61,11 @@ function sendSafeError(response, statusCode, message, debug, details = {}) {
     postReceived: details.postReceived,
     patchAttempted: details.patchAttempted,
     patchSucceeded: details.patchSucceeded,
+    foundCaseId: details.foundCaseId,
+    targetRecordId: details.targetRecordId,
+    patchedRecordId: details.patchedRecordId,
+    patchedFieldNames: details.patchedFieldNames,
+    airtableStatus: details.airtableStatus,
     message
   });
 }
@@ -172,7 +177,11 @@ async function updateAirtableReview(recordId, fields) {
     body: JSON.stringify({ fields })
   });
 
-  return handleAirtableResponse(airtableResponse, "Airtable write failed");
+  const data = await handleAirtableResponse(airtableResponse, "Airtable write failed");
+  return {
+    airtableStatus: airtableResponse.status,
+    patchedRecordId: data.id || ""
+  };
 }
 
 function buildReviewUpdateFields(body) {
@@ -275,8 +284,10 @@ async function handlePost(request, response, debug, caseId, token) {
   }
 
   const updateFields = buildReviewUpdateFields(body);
+  const patchedFieldNames = Object.keys(updateFields);
+  let patchResult;
   try {
-    await updateAirtableReview(record.id, updateFields);
+    patchResult = await updateAirtableReview(record.id, updateFields);
   } catch (error) {
     console.error("review api write failed", {
       errorType: error.errorType || "runtime_error",
@@ -287,13 +298,37 @@ async function handlePost(request, response, debug, caseId, token) {
       httpStatus: error.status || 502,
       postReceived: true,
       patchAttempted: true,
-      patchSucceeded: false
+      patchSucceeded: false,
+      foundCaseId: caseId,
+      targetRecordId: record.id,
+      patchedFieldNames,
+      airtableStatus: error.status || 502
+    });
+  }
+
+  if (patchResult.patchedRecordId !== record.id) {
+    return sendSafeError(response, 502, "Airtable 寫回目標不一致", debug, {
+      errorType: "airtable_record_mismatch",
+      httpStatus: 502,
+      postReceived: true,
+      patchAttempted: true,
+      patchSucceeded: false,
+      foundCaseId: caseId,
+      targetRecordId: record.id,
+      patchedRecordId: patchResult.patchedRecordId,
+      patchedFieldNames,
+      airtableStatus: patchResult.airtableStatus
     });
   }
 
   return sendJson(response, 200, {
     ok: true,
     patchSucceeded: true,
+    foundCaseId: caseId,
+    targetRecordId: record.id,
+    patchedRecordId: patchResult.patchedRecordId,
+    patchedFieldNames,
+    airtableStatus: patchResult.airtableStatus,
     message: "審核結果已送出，系統會自動進入下一步。"
   });
 }
