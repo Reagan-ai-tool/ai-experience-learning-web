@@ -166,7 +166,7 @@ export default async function handler(request, response) {
     const reviewToken = fields[process.env.AIRTABLE_REVIEW_TOKEN_FIELD];
     if (!reviewToken || token !== reviewToken) {
       return sendSafeError(response, 401, "連結無效或已過期", debug, {
-        errorType: "runtime_error",
+        errorType: "invalid_token",
         httpStatus: 401
       });
     }
