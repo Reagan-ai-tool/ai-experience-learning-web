@@ -197,7 +197,7 @@ function buildReviewUpdateFields(body) {
     [process.env.AIRTABLE_REVIEW_STATUS_FIELD]: reviewStatus,
     [process.env.AIRTABLE_REVIEW_NOTES_FIELD]: cleanText(body.expertReviewNotes, 5000),
     [process.env.AIRTABLE_REVISED_SOLUTION_FIELD]: cleanText(body.expertRevisedSolution, 10000),
-    [process.env.AIRTABLE_REVIEWED_AT_FIELD]: new Date().toISOString(),
+    [process.env.AIRTABLE_REVIEWED_AT_FIELD]: new Date().toISOString().slice(0, 10),
     [process.env.AIRTABLE_REVIEW_SOURCE_FIELD]: REVIEW_SOURCE_VALUE,
     [process.env.AIRTABLE_TOKEN_STATUS_FIELD]: TOKEN_USED_VALUE
   };
