@@ -30,6 +30,24 @@ function getSingleQueryValue(value) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function isDebugRequest(request) {
+  return getSingleQueryValue(request.query?.debug) === "1";
+}
+
+function sendSafeError(response, statusCode, message, debug, details = {}) {
+  if (!debug) {
+    return sendJson(response, statusCode, { message });
+  }
+
+  return sendJson(response, statusCode, {
+    ok: false,
+    errorType: details.errorType || "runtime_error",
+    missingEnv: details.missingEnv || [],
+    httpStatus: details.httpStatus || statusCode,
+    message
+  });
+}
+
 function escapeFormulaString(value) {
   return String(value).replaceAll("'", "\\'");
 }
@@ -42,6 +60,38 @@ function pickCaseFields(fields) {
   return Object.fromEntries(
     Object.entries(FIELD_MAP).map(([key, fieldName]) => [key, fields[fieldName] || ""])
   );
+}
+
+function classifyAirtableError(status, errorPayload) {
+  const errorType = String(errorPayload?.error?.type || "").toUpperCase();
+  const errorMessage = String(errorPayload?.error?.message || "").toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return "airtable_auth_error";
+  }
+
+  if (status === 404) {
+    return "airtable_not_found";
+  }
+
+  if (
+    errorType.includes("UNKNOWN_FIELD") ||
+    errorType.includes("INVALID_FIELD") ||
+    errorMessage.includes("unknown field") ||
+    errorMessage.includes("field")
+  ) {
+    return "airtable_field_error";
+  }
+
+  if (
+    errorType.includes("FORMULA") ||
+    errorMessage.includes("formula") ||
+    errorMessage.includes("filterbyformula")
+  ) {
+    return "airtable_filter_error";
+  }
+
+  return "runtime_error";
 }
 
 async function findAirtableCase(caseId) {
@@ -62,7 +112,11 @@ async function findAirtableCase(caseId) {
   });
 
   if (!airtableResponse.ok) {
-    throw new Error(`Airtable read failed: ${airtableResponse.status}`);
+    const errorPayload = await airtableResponse.json().catch(() => ({}));
+    const error = new Error("Airtable read failed");
+    error.status = airtableResponse.status;
+    error.errorType = classifyAirtableError(airtableResponse.status, errorPayload);
+    throw error;
   }
 
   const data = await airtableResponse.json();
@@ -70,40 +124,64 @@ async function findAirtableCase(caseId) {
 }
 
 export default async function handler(request, response) {
+  const debug = isDebugRequest(request);
+
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
-    return sendJson(response, 405, { message: "Method Not Allowed" });
+    return sendSafeError(response, 405, "Method Not Allowed", debug, {
+      errorType: "runtime_error",
+      httpStatus: 405
+    });
   }
 
   const missingEnv = getMissingEnv();
   if (missingEnv.length > 0) {
-    return sendJson(response, 500, { message: "審核 API 尚未完成環境設定" });
+    return sendSafeError(response, 500, "審核 API 尚未完成環境設定", debug, {
+      errorType: "missing_env",
+      missingEnv,
+      httpStatus: 500
+    });
   }
 
   const caseId = getSingleQueryValue(request.query?.caseId);
   const token = getSingleQueryValue(request.query?.token);
 
   if (!caseId || !token) {
-    return sendJson(response, 400, { message: "缺少 caseId 或 token" });
+    return sendSafeError(response, 400, "缺少 caseId 或 token", debug, {
+      errorType: "runtime_error",
+      httpStatus: 400
+    });
   }
 
   try {
     const record = await findAirtableCase(caseId);
     if (!record) {
-      return sendJson(response, 404, { message: "找不到此案例" });
+      return sendSafeError(response, 404, "找不到此案例", debug, {
+        errorType: "airtable_not_found",
+        httpStatus: 404
+      });
     }
 
     const fields = record.fields || {};
     const reviewToken = fields[process.env.AIRTABLE_REVIEW_TOKEN_FIELD];
     if (!reviewToken || token !== reviewToken) {
-      return sendJson(response, 401, { message: "連結無效或已過期" });
+      return sendSafeError(response, 401, "連結無效或已過期", debug, {
+        errorType: "runtime_error",
+        httpStatus: 401
+      });
     }
 
     return sendJson(response, 200, {
       case: pickCaseFields(fields)
     });
   } catch (error) {
-    console.error("review api read failed", error);
-    return sendJson(response, 502, { message: "目前無法讀取審核資料，請稍後再試" });
+    console.error("review api read failed", {
+      errorType: error.errorType || "runtime_error",
+      httpStatus: error.status || 502
+    });
+    return sendSafeError(response, 502, "目前無法讀取審核資料，請稍後再試", debug, {
+      errorType: error.errorType || "runtime_error",
+      httpStatus: error.status || 502
+    });
   }
 }
