@@ -1,7 +1,6 @@
 import { cases, reviewItems } from "./data/cases.js";
 
 const app = document.querySelector("#app");
-const REVIEW_DEMO_TOKEN = "test-token";
 
 const navItems = [
   { href: "/", label: "首頁" },
@@ -277,18 +276,44 @@ function renderReviewAccessError(message) {
   `;
 }
 
-function renderReviewPage(caseId) {
+function renderReviewLoading() {
+  return `
+    <section class="empty-state review-error" role="status">
+      <p class="eyebrow">老手審核入口</p>
+      <h1>正在讀取審核資料</h1>
+      <p>系統正在透過後端 API 驗證連結並讀取 Airtable 測試資料。</p>
+    </section>
+  `;
+}
+
+function renderReviewApiError(message) {
+  return `
+    <section class="empty-state review-error" role="alert">
+      <p class="eyebrow">老手審核入口</p>
+      <h1>${escapeHtml(message || "目前無法讀取審核資料")}</h1>
+      <p>請稍後再試，或請管理者確認 Airtable 測試資料與 Vercel 環境變數設定。</p>
+    </section>
+  `;
+}
+
+async function fetchReviewCase(caseId) {
   const token = new URLSearchParams(window.location.search).get("token") || "";
+  const response = await fetch(
+    `/api/review/${encodeURIComponent(caseId)}?token=${encodeURIComponent(token)}`,
+    { headers: { Accept: "application/json" } }
+  );
+  const data = await response.json().catch(() => ({}));
 
-  if (token !== REVIEW_DEMO_TOKEN) {
-    return renderReviewAccessError("連結無效或已過期");
+  if (!response.ok) {
+    const error = new Error(data.message || "目前無法讀取審核資料");
+    error.status = response.status;
+    throw error;
   }
 
-  const caseItem = getCaseById(caseId);
-  if (!caseItem) {
-    return renderReviewAccessError("找不到此案例");
-  }
+  return data.case;
+}
 
+function renderReviewPage(caseItem) {
   const fields = [
     ["Case ID", caseItem.caseId],
     ["Case Title", caseItem.title],
@@ -309,9 +334,9 @@ function renderReviewPage(caseId) {
         <span class="case-id">${escapeHtml(caseItem.caseId)}</span>
         <h1>${escapeHtml(caseItem.title)}</h1>
         <p>這是前端 Demo，尚未寫回 Airtable。</p>
-        <p>目前是 v0.3-A Demo；送出結果目前只顯示成功訊息，不會寫入 Airtable，也不會連接 Softr / n8n / Dify 正式流程。</p>
+        <p>目前是 v0.3-B1 Demo；此頁透過後端 API 安全讀取 Airtable，只做 GET 讀取，不做 POST 寫回。</p>
       </div>
-      <span class="heading-badge">v0.3-A frontend only</span>
+      <span class="heading-badge">v0.3-B1 API read only</span>
     </section>
 
     <section class="review-layout" aria-label="案例審核內容">
@@ -582,6 +607,17 @@ function renderNotFound() {
   `;
 }
 
+function renderReviewRoute(caseId, activePath) {
+  renderShell(renderReviewLoading(), activePath);
+  fetchReviewCase(caseId)
+    .then((caseItem) => {
+      renderShell(renderReviewPage(caseItem), activePath);
+    })
+    .catch((error) => {
+      renderShell(renderReviewApiError(error.message), activePath);
+    });
+}
+
 function render() {
   const activePath = normalizePath(window.location.pathname);
   let content;
@@ -598,7 +634,8 @@ function render() {
     content = renderPractice(caseId);
   } else if (activePath.startsWith("/review/")) {
     const caseId = decodeURIComponent(activePath.split("/")[2] || "");
-    content = renderReviewPage(caseId);
+    renderReviewRoute(caseId, activePath);
+    return;
   } else if (activePath === "/submit-experience") {
     content = renderSubmitExperience();
   } else if (activePath === "/admin-review") {
