@@ -313,6 +313,26 @@ async function fetchReviewCase(caseId) {
   return data.case;
 }
 
+async function submitReviewResult(caseId, payload) {
+  const response = await fetch(`/api/review/${encodeURIComponent(caseId)}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || data.ok !== true) {
+    const error = new Error(data.message || "目前無法送出審核結果");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
 function renderReviewPage(caseItem) {
   const fields = [
     ["Case ID", caseItem.caseId],
@@ -334,9 +354,9 @@ function renderReviewPage(caseItem) {
         <span class="case-id">${escapeHtml(caseItem.caseId)}</span>
         <h1>${escapeHtml(caseItem.title)}</h1>
         <p>這是前端 Demo，尚未寫回 Airtable。</p>
-        <p>目前是 v0.3-B1 Demo；此頁透過後端 API 安全讀取 Airtable，只做 GET 讀取，不做 POST 寫回。</p>
+        <p>目前是 v0.3-B2 Demo；此頁透過後端 API 安全讀取 Airtable，送出時只寫回審核白名單欄位。</p>
       </div>
-      <span class="heading-badge">v0.3-B1 API read only</span>
+      <span class="heading-badge">v0.3-B2 API review write</span>
     </section>
 
     <section class="review-layout" aria-label="案例審核內容">
@@ -347,8 +367,8 @@ function renderReviewPage(caseItem) {
       <aside class="review-form-panel" aria-label="老手審核區">
         <span class="panel-kicker">老手審核區</span>
         <h2>送出審核結果</h2>
-        <p>這是前端 Demo，尚未寫回 Airtable。</p>
-        <p>Demo 版送出後只會顯示成功訊息，並在 console.log 印出審核資料。</p>
+        <p>v0.3-B2 只允許 TEST_REVIEW_001 測試寫回。</p>
+        <p>送出後只寫回老手審核狀態、備註、修正版解法、最後審核時間、審核來源與 Token 使用狀態。</p>
         <form id="expert-review-form" class="review-form" data-case-id="${escapeHtml(caseItem.caseId)}">
           <label>
             <span>審核狀態</span>
@@ -372,6 +392,7 @@ function renderReviewPage(caseItem) {
         <div class="success-message" id="review-submit-message" role="status" hidden>
           審核結果已送出，系統會自動進入下一步。
         </div>
+        <div class="success-message error-message" id="review-submit-error" role="alert" hidden></div>
       </aside>
     </section>
   `;
@@ -662,7 +683,7 @@ document.addEventListener("click", (event) => {
   }
 });
 
-document.addEventListener("submit", (event) => {
+document.addEventListener("submit", async (event) => {
   if (event.target.id === "experience-form") {
     event.preventDefault();
     const message = document.querySelector("#submit-message");
@@ -686,22 +707,44 @@ document.addEventListener("submit", (event) => {
   if (event.target.id === "expert-review-form") {
     event.preventDefault();
     const formData = new FormData(event.target);
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const message = document.querySelector("#review-submit-message");
+    const errorMessage = document.querySelector("#review-submit-error");
+    const caseId = event.target.dataset.caseId;
     const reviewPayload = {
-      caseId: event.target.dataset.caseId,
       token: new URLSearchParams(window.location.search).get("token") || "",
       reviewStatus: formData.get("reviewStatus"),
       expertReviewNotes: formData.get("expertReviewNotes"),
-      expertRevisedSolution: formData.get("expertRevisedSolution"),
-      submittedAt: new Date().toISOString(),
-      source: "self-hosted-review-demo"
+      expertRevisedSolution: formData.get("expertRevisedSolution")
     };
 
-    console.log("expert review demo submit", reviewPayload);
-
-    const message = document.querySelector("#review-submit-message");
     if (message) {
-      message.hidden = false;
-      message.scrollIntoView({ behavior: "smooth", block: "center" });
+      message.hidden = true;
+    }
+    if (errorMessage) {
+      errorMessage.hidden = true;
+      errorMessage.textContent = "";
+    }
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    try {
+      await submitReviewResult(caseId, reviewPayload);
+      if (message) {
+        message.hidden = false;
+        message.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } catch (error) {
+      if (errorMessage) {
+        errorMessage.textContent = error.message || "目前無法送出審核結果";
+        errorMessage.hidden = false;
+        errorMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   }
 });
