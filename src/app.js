@@ -13,7 +13,6 @@ const navItems = [
 const siteVersionAnnouncement = {
   version: "v0.3-C",
   date: "2026-05-26",
-  storageKey: "site-ops-version-announcement-v0.3-C",
   summaries: [
     "CASE005 第一輪白名單寫回已完成 Preview 與 Production 測試",
     "CASE005 可在白名單限制下安全寫回 6 個審核欄位",
@@ -143,6 +142,10 @@ function renderShell(content, activePath) {
   `;
 }
 
+function getVersionAnnouncementStorageKey(version) {
+  return `site-ops-version-announcement-${version}`;
+}
+
 function renderVersionSummaryItems() {
   return siteVersionAnnouncement.summaries
     .map((item) => `<li>${escapeHtml(item)}</li>`)
@@ -200,9 +203,10 @@ function setupVersionAnnouncement(activePath) {
     return;
   }
 
+  const storageKey = getVersionAnnouncementStorageKey(siteVersionAnnouncement.version);
   let hasDismissed = false;
   try {
-    hasDismissed = window.localStorage.getItem(siteVersionAnnouncement.storageKey) === "dismissed";
+    hasDismissed = window.localStorage.getItem(storageKey) === "dismissed";
   } catch (_error) {
     hasDismissed = false;
   }
@@ -214,7 +218,7 @@ function setupVersionAnnouncement(activePath) {
   const dismiss = () => {
     modal.hidden = true;
     try {
-      window.localStorage.setItem(siteVersionAnnouncement.storageKey, "dismissed");
+      window.localStorage.setItem(storageKey, "dismissed");
     } catch (_error) {
       // localStorage may be unavailable in strict privacy modes. Closing still works for the current page view.
     }
