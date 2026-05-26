@@ -5,6 +5,7 @@ const app = document.querySelector("#app");
 const navItems = [
   { href: "/", label: "首頁" },
   { href: "/cases", label: "案例列表" },
+  { href: "/case-status", label: "CASE 狀態" },
   { href: "/submit-experience", label: "經驗投稿" },
   { href: "/admin-review", label: "管理審核 demo" },
   { href: "/review/CASE006?token=test-token", label: "老手審核 Demo" }
@@ -21,6 +22,51 @@ const siteVersionAnnouncement = {
     "下一步將評估版本公告、自動 token 產生與管理後台方向"
   ]
 };
+
+const caseStatusItems = [
+  {
+    caseId: "CASE005",
+    title: "流程改善類展示樣板 / 二重鍋清洗流程",
+    position: "第一輪正式候選白名單寫回案例",
+    readable: "是",
+    writable: "可在白名單限制下安全寫回 6 個審核欄位",
+    publishable: "否",
+    tokenStatus: "支援一次性 token；不顯示 token value",
+    difyStatus: "既有測試可沿用，入口與版本已確認",
+    productionStatus: "白名單寫回已通過",
+    nextStep: "暫不擴大發布，後續可評估自動 token 產生",
+    risk: "可寫回不等於可發布",
+    tone: "safe"
+  },
+  {
+    caseId: "CASE006",
+    title: "止損判斷類展示樣板 / 30 斤白米秤錯",
+    position: "正式候選案例，暫不進第一輪白名單",
+    readable: "是",
+    writable: "否",
+    publishable: "否",
+    tokenStatus: "不顯示 token value",
+    difyStatus: "既有測試可沿用，入口與版本已確認",
+    productionStatus: "不可寫回擋門正常",
+    nextStep: "若未來要開放，需另行規劃與人工授權",
+    risk: "目前不可寫回、不可發布",
+    tone: "blocked"
+  },
+  {
+    caseId: "CASE004",
+    title: "流程改善候選案例 / 現場流程太慢如何透過分工改善效率",
+    position: "後續候選評估案例",
+    readable: "待確認或依既有紀錄評估",
+    writable: "否",
+    publishable: "否",
+    tokenStatus: "不顯示 token value",
+    difyStatus: "有既有測試紀錄",
+    productionStatus: "不可寫回擋門正常",
+    nextStep: "後續可做正式候選導入評估",
+    risk: "本次不加入白名單",
+    tone: "pending"
+  }
+];
 
 function normalizePath(pathname) {
   const cleaned = pathname.replace(/\/+$/, "");
@@ -245,6 +291,7 @@ function renderHome() {
         <div class="hero-actions" aria-label="主要行動">
           <a class="button primary" href="/cases" data-link>我要練習判斷力</a>
           <a class="button secondary" href="/submit-experience" data-link>我要分享我的經驗</a>
+          <a class="button secondary" href="/case-status" data-link>查看 CASE 狀態</a>
         </div>
       </div>
       <aside class="hero-status" aria-label="系統狀態">
@@ -710,6 +757,63 @@ function renderAdminReview() {
   `;
 }
 
+function renderCaseStatusCard(item) {
+  const fields = [
+    ["目前定位", item.position],
+    ["是否可讀取", item.readable],
+    ["是否可寫回", item.writable],
+    ["是否可發布", item.publishable],
+    ["token 狀態摘要", item.tokenStatus],
+    ["Dify 測試狀態", item.difyStatus],
+    ["Preview / Production 測試狀態", item.productionStatus],
+    ["下一步", item.nextStep],
+    ["風險提醒", item.risk]
+  ];
+
+  return `
+    <article class="case-status-card tone-${escapeHtml(item.tone)}">
+      <div class="case-status-card-header">
+        <div>
+          <p class="case-id">${escapeHtml(item.caseId)}</p>
+          <h2>${escapeHtml(item.title)}</h2>
+        </div>
+        <span class="readonly-badge">只讀</span>
+      </div>
+      <dl class="case-status-list">
+        ${fields
+          .map(
+            ([label, value]) => `
+              <div>
+                <dt>${escapeHtml(label)}</dt>
+                <dd>${escapeHtml(value)}</dd>
+              </div>
+            `
+          )
+          .join("")}
+      </dl>
+    </article>
+  `;
+}
+
+function renderCaseStatusOverview() {
+  return `
+    <section class="case-status-hero">
+      <p class="eyebrow">CASE-STATUS-001</p>
+      <h1>CASE 狀態只讀總覽</h1>
+      <p>
+        這個頁面只整理 CASE005 / CASE006 / CASE004 的目前導入狀態，幫助老師、協作者與 AI 搜尋理解正式案例正在分階段、安全地進入系統。
+      </p>
+      <div class="case-status-notice" role="note">
+        只讀狀態總覽：不讀寫 Airtable、不顯示 token value、不提供操作按鈕、不修改白名單、不修改發布狀態、不觸發自動發布。
+      </div>
+    </section>
+
+    <section class="case-status-grid" aria-label="CASE 狀態列表">
+      ${caseStatusItems.map(renderCaseStatusCard).join("")}
+    </section>
+  `;
+}
+
 function renderCaseNotFound(caseId) {
   return `
     <section class="empty-state">
@@ -754,6 +858,8 @@ function render() {
     content = renderHome();
   } else if (activePath === "/cases") {
     content = renderCases();
+  } else if (activePath === "/case-status") {
+    content = renderCaseStatusOverview();
   } else if (activePath.startsWith("/cases/")) {
     const caseId = decodeURIComponent(activePath.split("/")[2] || "");
     content = renderCaseDetail(caseId);
