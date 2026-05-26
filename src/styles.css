@@ -934,6 +934,106 @@ td > span:not(.status-badge) {
   justify-content: center;
 }
 
+.version-announcement {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(280px, 1.05fr);
+  gap: 24px;
+  align-items: start;
+  margin: 22px 0;
+  padding: 28px;
+  border: 1px solid rgba(63, 99, 243, 0.16);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(63, 99, 243, 0.08), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: var(--shadow-sm);
+}
+
+.version-announcement h2,
+.version-modal h2 {
+  margin-bottom: 8px;
+}
+
+.version-announcement-main p:last-child,
+.version-modal p:last-child {
+  margin-bottom: 0;
+}
+
+.version-summary-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 20px;
+  color: #374151;
+}
+
+.version-summary-list.compact {
+  margin: 18px 0;
+}
+
+.version-summary-list li::marker {
+  color: var(--accent);
+}
+
+.version-note {
+  margin-top: 12px;
+  color: var(--pending);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.version-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 23, 22, 0.48);
+}
+
+.version-modal {
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid rgba(220, 226, 224, 0.9);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.version-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.modal-close-button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.modal-close-button:hover {
+  border-color: #c6cfcc;
+  background: var(--surface-muted);
+}
+
+.modal-confirm-button {
+  margin-top: 2px;
+}
+
 .site-footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -963,6 +1063,7 @@ td > span:not(.status-badge) {
   }
 
   .workspace-hero,
+  .version-announcement,
   .entry-grid,
   .value-grid,
   .case-grid,
@@ -1020,6 +1121,8 @@ td > span:not(.status-badge) {
 
   .hero-main,
   .hero-status,
+  .version-announcement,
+  .version-modal,
   .entry-card,
   .value-card,
   .case-card,
