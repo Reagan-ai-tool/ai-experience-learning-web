@@ -10,6 +10,18 @@ const navItems = [
   { href: "/review/CASE006?token=test-token", label: "老手審核 Demo" }
 ];
 
+const siteVersionAnnouncement = {
+  version: "v0.3-C",
+  date: "2026-05-26",
+  summaries: [
+    "CASE005 第一輪白名單寫回已完成 Preview 與 Production 測試",
+    "CASE005 可在白名單限制下安全寫回 6 個審核欄位",
+    "CASE006 / CASE004 仍不可寫回、不可發布",
+    "已完成正式案例導入狀態整理與交接紀錄",
+    "下一步將評估版本公告、自動 token 產生與管理後台方向"
+  ]
+};
+
 function normalizePath(pathname) {
   const cleaned = pathname.replace(/\/+$/, "");
   return cleaned || "/";
@@ -123,11 +135,104 @@ function renderShell(content, activePath) {
     </main>
     <footer class="site-footer">
       <div class="site-footer-inner">
-        <span>v0.3-A 本機前端 demo</span>
+        <span>${siteVersionAnnouncement.version} 自架網站 demo</span>
         <span>只使用專案內 mock data，不連接正式資料庫或外部 API。</span>
       </div>
     </footer>
   `;
+}
+
+function getVersionAnnouncementStorageKey(version) {
+  return `site-ops-version-announcement-${version}`;
+}
+
+function renderVersionSummaryItems() {
+  return siteVersionAnnouncement.summaries
+    .map((item) => `<li>${escapeHtml(item)}</li>`)
+    .join("");
+}
+
+function renderVersionAnnouncement() {
+  const summaryItems = renderVersionSummaryItems();
+  return `
+    <section class="version-announcement" aria-labelledby="version-title">
+      <div class="version-announcement-main">
+        <p class="eyebrow">網站版本更新</p>
+        <h2 id="version-title">目前版本：${escapeHtml(siteVersionAnnouncement.version)}</h2>
+        <p>
+          更新日期：<time datetime="${escapeHtml(siteVersionAnnouncement.date)}">${escapeHtml(
+    siteVersionAnnouncement.date
+  )}</time>。系統持續把真實經驗整理成可練習的判斷力案例，並保留每次版本更新軌跡。
+        </p>
+        <p class="version-note">這不是正式發布案例，只是系統版本更新公告。</p>
+      </div>
+      <ul class="version-summary-list" aria-label="本次更新摘要">
+        ${summaryItems}
+      </ul>
+    </section>
+
+    <div class="version-modal-backdrop" data-version-modal hidden>
+      <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title" aria-describedby="version-modal-desc">
+        <div class="version-modal-header">
+          <div>
+            <p class="eyebrow">版本更新公告</p>
+            <h2 id="version-modal-title">${escapeHtml(siteVersionAnnouncement.version)} 已更新</h2>
+          </div>
+          <button class="modal-close-button" type="button" data-version-dismiss aria-label="關閉版本更新公告">×</button>
+        </div>
+        <p id="version-modal-desc">
+          本次更新完成 CASE005 白名單寫回測試與正式案例導入狀態整理。CASE006 / CASE004 仍維持不可寫回、不可發布。
+        </p>
+        <ul class="version-summary-list compact">
+          ${summaryItems}
+        </ul>
+        <p class="version-note">這不是正式發布案例，只是系統版本更新公告。</p>
+        <button class="button primary modal-confirm-button" type="button" data-version-dismiss>我知道了</button>
+      </section>
+    </div>
+  `;
+}
+
+function setupVersionAnnouncement(activePath) {
+  if (activePath !== "/") {
+    return;
+  }
+
+  const modal = document.querySelector("[data-version-modal]");
+  if (!modal) {
+    return;
+  }
+
+  const storageKey = getVersionAnnouncementStorageKey(siteVersionAnnouncement.version);
+  let hasDismissed = false;
+  try {
+    hasDismissed = window.localStorage.getItem(storageKey) === "dismissed";
+  } catch (_error) {
+    hasDismissed = false;
+  }
+
+  if (!hasDismissed) {
+    modal.hidden = false;
+  }
+
+  const dismiss = () => {
+    modal.hidden = true;
+    try {
+      window.localStorage.setItem(storageKey, "dismissed");
+    } catch (_error) {
+      // localStorage may be unavailable in strict privacy modes. Closing still works for the current page view.
+    }
+  };
+
+  modal.querySelectorAll("[data-version-dismiss]").forEach((button) => {
+    button.addEventListener("click", dismiss);
+  });
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      dismiss();
+    }
+  });
 }
 
 function renderHome() {
@@ -158,6 +263,8 @@ function renderHome() {
         </div>
       </aside>
     </section>
+
+    ${renderVersionAnnouncement()}
 
     <section class="value-grid" aria-label="產品價值說明">
       <article class="value-card tone-blue">
@@ -666,6 +773,7 @@ function render() {
   }
 
   renderShell(content, activePath);
+  setupVersionAnnouncement(activePath);
 }
 
 document.addEventListener("click", (event) => {
