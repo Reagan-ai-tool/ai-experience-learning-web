@@ -15,7 +15,7 @@ const WRITE_ENV = [
   "AIRTABLE_TOKEN_STATUS_FIELD"
 ];
 
-const ALLOWED_WRITE_CASE_ID = "TEST_REVIEW_001";
+const ALLOWED_WRITE_CASE_IDS = new Set(["TEST_REVIEW_001", "CASE005"]);
 const TOKEN_USED_VALUE = "已使用";
 const REVIEW_SOURCE_VALUE = "自架網站";
 const ALLOWED_REVIEW_STATUSES = ["審核中", "已通過", "需修改", "不適合公開"];
@@ -240,8 +240,8 @@ async function handleGet(request, response, debug, caseId, token) {
 }
 
 async function handlePost(request, response, debug, caseId, token) {
-  if (caseId !== ALLOWED_WRITE_CASE_ID) {
-    return sendSafeError(response, 403, "目前僅允許測試案例寫回", debug, {
+  if (!ALLOWED_WRITE_CASE_IDS.has(caseId)) {
+    return sendSafeError(response, 403, "此案例尚未開放寫回", debug, {
       errorType: "write_case_not_allowed",
       httpStatus: 403,
       postReceived: true,
