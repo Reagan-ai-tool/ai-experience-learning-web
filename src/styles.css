@@ -1010,6 +1010,115 @@ td > span:not(.status-badge) {
   gap: 18px;
 }
 
+.case-status-hero,
+.case-status-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.case-status-hero {
+  padding: clamp(32px, 5vw, 56px);
+  margin-bottom: 22px;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(63, 99, 243, 0.08), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.case-status-hero h1 {
+  max-width: 900px;
+  font-size: clamp(2.2rem, 4.5vw, 4.2rem);
+}
+
+.case-status-hero p {
+  max-width: 860px;
+  color: var(--muted);
+  font-size: 1.04rem;
+}
+
+.case-status-notice {
+  max-width: 980px;
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--notice-line);
+  border-radius: 8px;
+  background: var(--notice-bg);
+  color: #5f3b00;
+  font-weight: 800;
+}
+
+.case-status-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.case-status-card {
+  padding: 26px;
+}
+
+.case-status-card.tone-safe {
+  border-color: rgba(19, 121, 91, 0.24);
+}
+
+.case-status-card.tone-blocked {
+  border-color: rgba(160, 90, 0, 0.24);
+}
+
+.case-status-card.tone-pending {
+  border-color: rgba(63, 99, 243, 0.2);
+}
+
+.case-status-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.case-status-card-header h2 {
+  margin-bottom: 0;
+}
+
+.readonly-badge {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid rgba(63, 99, 243, 0.22);
+  border-radius: 999px;
+  background: #eef2ff;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.case-status-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.case-status-list div {
+  padding: 14px;
+  border: 1px solid #e5e9e8;
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.case-status-list dt {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.case-status-list dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 800;
+}
+
 .modal-close-button {
   display: inline-grid;
   width: 36px;
@@ -1064,6 +1173,7 @@ td > span:not(.status-badge) {
 
   .workspace-hero,
   .version-announcement,
+  .case-status-list,
   .entry-grid,
   .value-grid,
   .case-grid,
@@ -1123,6 +1233,8 @@ td > span:not(.status-badge) {
   .hero-status,
   .version-announcement,
   .version-modal,
+  .case-status-hero,
+  .case-status-card,
   .entry-card,
   .value-card,
   .case-card,
